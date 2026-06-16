@@ -1,0 +1,373 @@
+==================================================================
+        NEET COLLEGE PORTAL — COMPLETE PROJECT GUIDE
+==================================================================
+
+This single file explains:
+  1. What this project does (your requirements)
+  2. The folder structure
+  3. How to run it on your own computer (local test)
+  4. How to put it on GitHub
+  5. How to deploy the BACKEND on Render
+  6. How to deploy the FRONTEND on Netlify
+  7. How to connect your GoDaddy custom domain
+  8. How to turn ON real payments (Razorpay)
+  9. How to UPDATE the college data later
+ 10. How to update code later (the normal workflow)
+ 11. Important notes about "screenshot blocking"
+
+Read it top to bottom the first time. Later you can jump to a section.
+
+------------------------------------------------------------------
+1. WHAT THIS PROJECT DOES (YOUR REQUIREMENTS)
+------------------------------------------------------------------
+- A website that lists 40 colleges (dummy data now, real data later).
+- Free for everyone: a NEET College Predictor (enter marks/rank, see
+  colleges you may get).
+- To read the FULL details of ONE college, a student pays Rs.65.
+- To unlock FULL details of ALL 40 colleges, a student pays Rs.600.
+- On the paid (full detail) pages, screenshots and copying are blocked
+  as much as a website technically can (see section 11).
+- Backend and frontend are in SEPARATE folders so you can deploy the
+  backend on Render and the frontend on Netlify.
+- Built with the MERN stack:
+    M = MongoDB (database)
+    E = Express (backend server)
+    R = React   (frontend website)
+    N = Node.js (runs the backend)
+
+------------------------------------------------------------------
+2. FOLDER STRUCTURE
+------------------------------------------------------------------
+judtyuio/
+├── backend/                  <-- deploy this to RENDER
+│   ├── config/db.js          (database connection)
+│   ├── controllers/          (logic: auth, colleges, payment, predictor)
+│   ├── data/colleges.js      (THE 40 DUMMY COLLEGES — edit here)
+│   ├── middleware/auth.js    (login security)
+│   ├── models/               (database shapes: User, College, Payment)
+│   ├── routes/               (API endpoints)
+│   ├── seed.js               (loads the 40 colleges into the database)
+│   ├── server.js             (starts the backend)
+│   ├── package.json
+│   └── .env.example          (copy to .env and fill in)
+│
+├── frontend/                 <-- deploy this to NETLIFY
+│   ├── public/_redirects     (makes page refresh work)
+│   ├── src/
+│   │   ├── pages/            (Home, Login, Register, Colleges,
+│   │   │                      CollegeDetail, Predictor)
+│   │   ├── components/       (Navbar, ProtectedRoute)
+│   │   ├── context/          (login state)
+│   │   ├── hooks/            (screenshot protection)
+│   │   ├── services/         (talks to backend)
+│   │   └── index.css         (all styling)
+│   ├── index.html
+│   ├── package.json
+│   └── .env.example          (copy to .env and fill in)
+│
+├── render.yaml               (Render config for backend)
+├── netlify.toml              (Netlify config for frontend)
+└── PROJECT_GUIDE.txt         (this file)
+
+------------------------------------------------------------------
+3. RUN IT ON YOUR OWN COMPUTER (LOCAL TEST) — DO THIS FIRST
+------------------------------------------------------------------
+You need Node.js installed (https://nodejs.org, LTS version).
+
+STEP A — Get a free MongoDB database:
+  1. Go to https://www.mongodb.com/atlas and create a free account.
+  2. Create a free "M0" cluster.
+  3. Click "Connect" -> "Drivers" -> copy the connection string. It looks
+     like: mongodb+srv://USER:PASSWORD@cluster0.xxxxx.mongodb.net/
+  4. In "Database Access" create a user + password (remember them).
+  5. In "Network Access" click "Add IP Address" -> "Allow access from
+     anywhere" (0.0.0.0/0) so Render can connect later.
+
+STEP B — Start the backend:
+  Open a terminal in the project and run:
+     cd backend
+     copy .env.example .env        (Windows)   OR   cp .env.example .env (Mac/Linux)
+  Open backend/.env and set:
+     MONGO_URI = your MongoDB string from Step A
+     JWT_SECRET = any long random text (e.g. mash the keyboard)
+     CLIENT_URL = http://localhost:5173
+  Leave the Razorpay keys empty for now (DEMO MODE will be used).
+  Then run:
+     npm install
+     npm run seed     (loads the 40 colleges — run this once)
+     npm run dev      (starts the backend on http://localhost:5000)
+
+STEP C — Start the frontend (open a SECOND terminal):
+     cd frontend
+     copy .env.example .env        (Windows)   OR   cp .env.example .env
+  Open frontend/.env and set:
+     VITE_API_URL = http://localhost:5000
+  Then run:
+     npm install
+     npm run dev      (opens http://localhost:5173)
+
+STEP D — Test in the browser (http://localhost:5173):
+  - Click "Free Predictor", enter marks like 540, press Predict.
+  - Click "Sign Up", create an account.
+  - Open a college -> click "Unlock this college - Rs.65".
+    Because Razorpay keys are empty, it uses DEMO MODE and unlocks
+    instantly (no real money). This lets you test everything.
+  - Try the "Buy Full Package - Rs.600" button on the Colleges page.
+
+When real payments are set up (section 8), these buttons open the real
+Razorpay payment popup instead.
+
+------------------------------------------------------------------
+4. PUT THE PROJECT ON GITHUB
+------------------------------------------------------------------
+  1. Create a free account at https://github.com
+  2. Click the "+" (top right) -> "New repository".
+     - Name: college-portal  (any name)
+     - Keep it Public or Private (your choice)
+     - DO NOT add a README/.gitignore (we already have them)
+     - Click "Create repository"
+  3. Install Git from https://git-scm.com if you do not have it.
+  4. In a terminal, from the project root folder (judtyuio), run:
+
+     git init
+     git add .
+     git commit -m "Initial commit: NEET college portal"
+     git branch -M main
+     git remote add origin https://github.com/YOUR_USERNAME/college-portal.git
+     git push -u origin main
+
+  IMPORTANT: Your .env files are ignored by .gitignore, so your secrets
+  are NOT uploaded. That is correct and safe.
+
+------------------------------------------------------------------
+5. DEPLOY THE BACKEND ON RENDER (FREE)
+------------------------------------------------------------------
+  1. Go to https://render.com and sign up (use "Sign in with GitHub").
+  2. Click "New +" -> "Web Service".
+  3. Connect your GitHub and pick the college-portal repo.
+  4. Fill in:
+       - Name:            college-portal-backend
+       - Root Directory:  backend
+       - Runtime:         Node
+       - Build Command:   npm install
+       - Start Command:   npm start
+       - Instance Type:   Free
+  5. Click "Advanced" -> "Add Environment Variable" and add these
+     (same names as in backend/.env.example):
+       MONGO_URI            = your MongoDB Atlas string
+       JWT_SECRET           = your long random secret
+       JWT_EXPIRES_IN       = 7d
+       SINGLE_COLLEGE_PRICE = 6500
+       FULL_PACKAGE_PRICE   = 60000
+       CLIENT_URL           = (leave blank for now; fill after Netlify)
+       RAZORPAY_KEY_ID      = (leave blank for now -> DEMO MODE)
+       RAZORPAY_KEY_SECRET  = (leave blank for now)
+  6. Click "Create Web Service". Wait for it to say "Live".
+  7. Copy your backend URL. It looks like:
+        https://college-portal-backend.onrender.com
+  8. Load the colleges into the live database (one time):
+     Option 1 (easy): in Render, open your service -> "Shell" tab ->
+        run:  npm run seed
+     Option 2: run it locally with the SAME MONGO_URI (it writes to the
+        same Atlas database):  cd backend  then  npm run seed
+
+  NOTE: Render's free service "sleeps" after inactivity, so the first
+  request after a while can take ~30 seconds. That is normal on free tier.
+
+------------------------------------------------------------------
+6. DEPLOY THE FRONTEND ON NETLIFY (FREE)
+------------------------------------------------------------------
+  1. Go to https://netlify.com and sign up with GitHub.
+  2. Click "Add new site" -> "Import an existing project" -> GitHub ->
+     choose the college-portal repo.
+  3. Set the build settings (or it reads netlify.toml automatically):
+       - Base directory:     frontend
+       - Build command:      npm run build
+       - Publish directory:  frontend/dist
+  4. Click "Add environment variables" and add:
+       VITE_API_URL = https://college-portal-backend.onrender.com
+       (your Render URL from section 5, NO trailing slash)
+  5. Click "Deploy site". When done you get a URL like:
+        https://random-name-123.netlify.app
+  6. Go back to RENDER -> your backend -> Environment -> set:
+        CLIENT_URL = https://random-name-123.netlify.app
+     (and later also your custom domain, comma-separated, see below)
+     Save -> Render redeploys automatically.
+
+  Now open the Netlify URL — your live website works end to end.
+
+------------------------------------------------------------------
+7. CONNECT YOUR GODADDY CUSTOM DOMAIN
+------------------------------------------------------------------
+You point your GoDaddy domain to the Netlify frontend. (The backend can
+keep its onrender.com URL — visitors never see it.)
+
+PART A — Add the domain in Netlify:
+  1. In Netlify, open your site -> "Domain settings" ->
+     "Add a domain" -> type your domain (e.g. mycollegeportal.com) ->
+     "Verify" -> "Add domain".
+  2. Netlify will show you DNS records to set. You will typically use:
+       - For the root domain (mycollegeportal.com):
+           an "A" record pointing to Netlify's load balancer IP
+           75.2.60.5
+       - For "www" (www.mycollegeportal.com):
+           a "CNAME" record pointing to your-site.netlify.app
+
+     (Netlify shows the exact values on screen — always use what Netlify
+      displays, in case their IP changes.)
+
+PART B — Set the DNS at GoDaddy:
+  1. Log in to https://godaddy.com -> "My Products" -> your domain ->
+     "DNS" / "Manage DNS".
+  2. Add / edit records to match what Netlify gave you:
+       Type=A,     Name=@,    Value=75.2.60.5            (root domain)
+       Type=CNAME, Name=www,  Value=your-site.netlify.app (www)
+     Remove any old/conflicting "A" or "CNAME" records for @ and www.
+  3. Save. DNS changes can take from a few minutes up to 48 hours.
+
+PART C — Enable HTTPS:
+  1. Back in Netlify -> "Domain settings" -> "HTTPS" -> Netlify will
+     automatically issue a free SSL certificate once DNS is verified.
+  2. Optionally set your custom domain as the "Primary domain".
+
+PART D — Allow the domain in the backend (CORS):
+  1. In Render -> backend -> Environment -> update:
+        CLIENT_URL = https://mycollegeportal.com,https://www.mycollegeportal.com,https://your-site.netlify.app
+     (comma-separated list, no spaces issues — the code trims spaces)
+  2. Save -> Render redeploys. Now your custom domain can call the API.
+
+DONE. Visitors go to https://mycollegeportal.com and everything works.
+
+------------------------------------------------------------------
+8. TURN ON REAL PAYMENTS (RAZORPAY)
+------------------------------------------------------------------
+Until you add Razorpay keys, the site runs in DEMO MODE (unlocks without
+real money) — great for testing. To accept real Rs.65 / Rs.600 payments:
+
+  1. Create an account at https://razorpay.com (India).
+  2. Complete KYC (PAN, bank account) to accept live payments.
+  3. Dashboard -> "Settings" -> "API Keys" -> "Generate Key".
+     - For testing use the "Test Mode" keys (rzp_test_...).
+     - For real money use "Live Mode" keys (rzp_live_...).
+  4. In RENDER -> backend -> Environment, set:
+        RAZORPAY_KEY_ID     = your key id
+        RAZORPAY_KEY_SECRET = your key secret
+     Save -> Render redeploys.
+  5. That's it. The frontend automatically opens the Razorpay popup
+     because the backend now returns real order info instead of demo.
+
+  The prices are controlled by these backend env vars (in paise):
+        SINGLE_COLLEGE_PRICE = 6500   (= Rs.65)
+        FULL_PACKAGE_PRICE   = 60000  (= Rs.600)
+  Change those numbers if you ever change pricing.
+
+------------------------------------------------------------------
+9. UPDATE THE COLLEGE DATA LATER (REPLACE DUMMY WITH REAL)
+------------------------------------------------------------------
+All 40 colleges live in ONE file: backend/data/colleges.js
+
+  1. Open backend/data/colleges.js
+  2. Right now it generates 40 colleges automatically. To use your real
+     data, replace the whole "module.exports" with a plain list, e.g.:
+
+        module.exports = [
+          {
+            name: "AIIMS Delhi",
+            city: "Delhi",
+            state: "Delhi",
+            type: "Government",
+            established: 1956,
+            nirfRank: 1,
+            shortDescription: "Top medical college...",   // FREE preview
+            totalSeats: 125,                                // FREE preview
+            courseOffered: "MBBS",                          // FREE preview
+            fullDescription: "....",                        // PAID
+            annualFees: "Rs.1,628 / year",                  // PAID
+            hostelFees: "Rs....",                           // PAID
+            cutoffGeneral: 57,                              // PAID
+            cutoffOBC: 200,                                 // PAID
+            cutoffSC: 1500,                                 // PAID
+            cutoffST: 3000,                                 // PAID
+            placementInfo: "....",                          // PAID
+            facilities: ["Library", "Hostel", "Hospital"],  // PAID
+            address: "....",                                // PAID
+            website: "https://aiims.edu",                   // PAID
+            contactPhone: "+91-...",                        // PAID
+            contactEmail: "info@aiims.edu"                  // PAID
+          },
+          // ... repeat for every college ...
+        ];
+
+     Fields marked FREE preview are shown to everyone. Fields marked PAID
+     are only shown after the student pays. Keep the field NAMES the same.
+
+  3. Save the file, commit and push to GitHub:
+        git add .
+        git commit -m "Update real college data"
+        git push
+  4. Reload the data into the live database. Run the seed against your
+     Atlas database (it deletes old colleges and inserts the new list):
+        - Easiest: Render -> your backend -> "Shell" tab -> npm run seed
+        - Or locally with the live MONGO_URI: cd backend then npm run seed
+
+  WARNING: "npm run seed" ERASES the colleges collection and re-inserts.
+  User accounts and payments are NOT touched. But note: if a paying user
+  unlocked a college and you delete/replace that college, the unlock may
+  no longer match. For small early-stage data this is fine; once you have
+  paying users, prefer editing existing colleges rather than full reseed,
+  or contact a developer to add an "update without delete" script.
+
+------------------------------------------------------------------
+10. UPDATE CODE LATER (NORMAL WORKFLOW)
+------------------------------------------------------------------
+Both Render and Netlify watch your GitHub repo. So updating is simple:
+
+  1. Change files on your computer.
+  2. Test locally (section 3).
+  3. Push to GitHub:
+        git add .
+        git commit -m "describe what you changed"
+        git push
+  4. Render auto-redeploys the backend; Netlify auto-redeploys the
+     frontend. Wait a minute, then refresh your live site.
+
+To change a setting (price, domain, keys) you usually only edit the
+ENVIRONMENT VARIABLES in Render/Netlify — no code change needed.
+
+------------------------------------------------------------------
+11. IMPORTANT NOTE ABOUT "BLOCKING SCREENSHOTS"
+------------------------------------------------------------------
+You asked that screenshots be prohibited on the paid data. Please read:
+
+  No website can 100% block screenshots. The operating system, a phone
+  camera, or another device can always capture the screen. This is a
+  hard technical limit for ALL websites — not specific to this project.
+
+What this project DOES do on paid pages (best-effort deterrents):
+  - Blurs the paid content the moment you switch tabs / minimize / the
+    window loses focus (which is when most screenshots are taken).
+  - Detects the PrintScreen key and common macOS screenshot shortcuts,
+    blurs the screen briefly, and clears the clipboard.
+  - Disables right-click, text selection, copy, cut, and drag on paid
+    content.
+  - Blocks common "save/print/view-source/devtools" keyboard shortcuts.
+
+This stops casual copying for the vast majority of users. If you need
+stronger protection you would have to deliver content as watermarked
+images or use a native mobile app — tell a developer if you want that
+later.
+
+------------------------------------------------------------------
+QUICK CHEAT SHEET
+------------------------------------------------------------------
+Local backend:   cd backend  -> npm install -> npm run seed -> npm run dev
+Local frontend:  cd frontend -> npm install -> npm run dev
+Push updates:    git add . -> git commit -m "msg" -> git push
+Reseed data:     cd backend -> npm run seed   (after editing data/colleges.js)
+Prices:          Render env vars SINGLE_COLLEGE_PRICE / FULL_PACKAGE_PRICE
+Allow your site: Render env var CLIENT_URL (comma-separated origins)
+Backend API URL: Netlify env var VITE_API_URL
+
+==================================================================
+You're all set. Start with section 3 (run locally), then deploy.
+==================================================================

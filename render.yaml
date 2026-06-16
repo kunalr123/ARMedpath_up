@@ -1,0 +1,26 @@
+# Render deployment config for the backend.
+# Render will read this automatically if you connect the repo.
+services:
+  - type: web
+    name: college-portal-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: SINGLE_COLLEGE_PRICE
+        value: "6500"
+      - key: FULL_PACKAGE_PRICE
+        value: "60000"
+      - key: CLIENT_URL
+        sync: false
